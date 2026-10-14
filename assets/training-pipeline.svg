@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1180" viewBox="0 0 1440 1180" role="img" aria-labelledby="title desc">
+  <title id="title">From text to a resumable language-model training run</title>
+  <desc id="desc">The run_pretrained script configures and assembles the current pipeline. RustTokenizer trains BPE on the training corpus, or restores saved project parameters. Documents are encoded with EOS and cached as CPU token streams with document offsets. A document-aware sampler reads S plus one tokens and produces aligned TextBatch inputs and targets, with a loss mask for padded short documents. LMRunner collects micro-batches and totals supervised targets before running CausalLM and the pretraining task. Token cross-entropy is divided by the update-window token count; backward accumulates gradients before clipping, an optimizer update, an optional scheduler update, and gradient clearing. The script repeats training windows and records fixed-window validation, uncached autoregressive samples, JSON logs, and resumable best and last checkpoints containing model, optimizer, scheduler, counters, random states, and experiment identities.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#52657a"/></marker>
+    <marker id="loop-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#19755a"/></marker>
+    <style>
+      text { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; fill: #182b40; }
+      .title { font-size: 32px; font-weight: 700; }
+      .subtitle { font-size: 17px; fill: #52657a; }
+      .section { font-size: 20px; font-weight: 700; }
+      .label { font-size: 19px; font-weight: 700; }
+      .body { font-size: 17px; }
+      .small { font-size: 15px; fill: #52657a; }
+      .code { font-family: "Cascadia Code", Consolas, "Liberation Mono", monospace; font-size: 16px; }
+      .card { fill: #ffffff; stroke: #c7d5e3; stroke-width: 1.5; }
+      .flow { fill: none; stroke: #52657a; stroke-width: 2.2; marker-end: url(#arrow); }
+      .loop { fill: none; stroke: #19755a; stroke-width: 2.4; marker-end: url(#loop-arrow); }
+    </style>
+  </defs>
+  <rect width="1440" height="1180" rx="20" fill="#ffffff"/>
+
+  <text class="title" x="40" y="55">From text to a resumable training run</text>
+  <text class="subtitle" x="40" y="85">Current dense CausalLM pipeline · single device · task-defined objectives · optimizer-update windows</text>
+
+  <rect x="32" y="113" width="1376" height="77" rx="13" fill="#182b40"/>
+  <text x="56" y="145" style="font-size:21px;font-weight:700;fill:#ffffff">scripts/run_pretrained.py</text>
+  <text x="56" y="172" style="font-size:16px;fill:#d5e7f9">ExperimentConfig + ModelConfig / TrainConfig / RuntimeConfig</text>
+  <text x="743" y="145" style="font-size:17px;fill:#ffffff">Assemble tokenizer, data, task and LMRunner</text>
+  <text x="743" y="172" style="font-size:16px;fill:#d5e7f9">Seed RNGs · select device / dtype · schedule training, evaluation and samples</text>
+
+  <rect x="32" y="214" width="1376" height="215" rx="15" fill="#eff6ff" stroke="#d4e4f6"/>
+  <text class="section" x="56" y="247">1  Prepare documents and sample aligned next-token batches</text>
+
+  <rect class="card" x="72" y="269" width="279" height="131" rx="10"/>
+  <text class="label" x="91" y="300">Corpus records</text>
+  <text class="body" x="91" y="329">TXT / JSONL / Parquet</text>
+  <text class="body" x="91" y="355">Explicit train and validation files</text>
+  <text class="small" x="91" y="382">DataPipeline/text.py</text>
+
+  <rect class="card" x="411" y="269" width="279" height="131" rx="10"/>
+  <text class="label" x="430" y="300">RustTokenizer</text>
+  <text class="body" x="430" y="329">Train BPE on training records</text>
+  <text class="body" x="430" y="355">Resume: load exact BPE params</text>
+  <text class="small" x="430" y="382">Tokenizer/tokenizer.py</text>
+
+  <rect class="card" x="750" y="269" width="279" height="131" rx="10"/>
+  <text class="label" x="769" y="300">Encode documents</text>
+  <text class="body" x="769" y="329">EOS + document token budget</text>
+  <text class="body" x="769" y="355">CPU token mmap + doc offsets</text>
+  <text class="small" x="769" y="382">encode_limited_tokens + disk cache</text>
+
+  <rect class="card" x="1089" y="269" width="279" height="131" rx="10"/>
+  <text class="label" x="1108" y="300">get_batch</text>
+  <text class="body" x="1108" y="329">Read S+1 tokens within a doc</text>
+  <text class="body" x="1108" y="355">Right-pad short docs + loss_mask</text>
+  <text class="small" x="1108" y="382">DataPipeline/sampling.py</text>
+
+  <path class="flow" d="M351 334 H405"/>
+  <path class="flow" d="M690 334 H744"/>
+  <path class="flow" d="M1029 334 H1083"/>
+
+  <rect x="32" y="454" width="1376" height="418" rx="15" fill="#eef9f4" stroke="#cce8da"/>
+  <text class="section" x="56" y="488">2  LMRunner / BaseRunner: one optimizer-update window</text>
+  <text class="small" x="871" y="488">TrainingSystems/runner/lm_runner.py + base.py</text>
+
+  <rect x="72" y="510" width="1296" height="57" rx="9" fill="#d8efe4" stroke="#acd4bf"/>
+  <text x="93" y="545" style="font-size:18px;font-weight:600;fill:#175b46">Collect K micro-batches → pretrain_normalizers → N = supervised target tokens across this window</text>
+  <text x="1184" y="545" style="font-size:16px;fill:#175b46">Tail uses actual N</text>
+  <path class="flow" d="M1228 400 V504"/>
+  <path class="flow" d="M211 567 V590"/>
+
+  <rect class="card" x="72" y="596" width="279" height="137" rx="10"/>
+  <text class="label" x="91" y="627">TextBatch</text>
+  <text class="code" x="91" y="655">input_ids, targets: [B, S]</text>
+  <text class="body" x="91" y="681">Targets shifted by one in sampler</text>
+  <text class="small" x="91" y="710">loss_mask selects supervised targets</text>
+
+  <rect class="card" x="411" y="596" width="279" height="137" rx="10"/>
+  <text class="label" x="430" y="627">CausalLM</text>
+  <text class="body" x="430" y="655">Embedding → decoder blocks</text>
+  <text class="body" x="430" y="681">RMSNorm → LM head → logits</text>
+  <text class="small" x="430" y="710">RoPE causal MHA + SwiGLU</text>
+
+  <rect class="card" x="750" y="596" width="279" height="137" rx="10"/>
+  <text class="label" x="769" y="627">pretrained_task</text>
+  <text class="body" x="769" y="655">Select targets with loss_mask</text>
+  <text class="code" x="769" y="681">loss = token_CE_sum / N</text>
+  <text class="small" x="769" y="710">Log detached CE sum and token count</text>
+
+  <rect class="card" x="1089" y="596" width="279" height="137" rx="10"/>
+  <text class="label" x="1108" y="627">Backward + accumulate</text>
+  <text class="code" x="1108" y="655">loss.backward()</text>
+  <text class="body" x="1108" y="681">Accumulate all micro-batches</text>
+  <text class="small" x="1108" y="710">No optimizer step inside train_step</text>
+
+  <path class="flow" d="M351 664 H405"/>
+  <path class="flow" d="M690 664 H744"/>
+  <path class="flow" d="M1029 664 H1083"/>
+  <path class="flow" d="M1228 733 V764"/>
+
+  <rect x="72" y="770" width="1296" height="70" rx="10" fill="#ffffff" stroke="#acd4bf" stroke-width="1.5"/>
+  <text x="93" y="799" style="font-size:18px;font-weight:600;fill:#175b46">Clip gradients → optimizer.step → global_step += 1 → scheduler.step (if enabled) → zero_grad</text>
+  <text class="small" x="93" y="823">Update only if the window has an objective · repeat with updated weights until the configured update budget is reached</text>
+  <path class="loop" d="M72 805 H49 V538 H66"/>
+
+  <text class="section" x="56" y="912">3  Script-controlled events at step zero, configured intervals and the final step</text>
+  <path class="flow" d="M1384 872 V934 H268 V952"/>
+  <path class="flow" d="M720 934 V952"/>
+  <path class="flow" d="M720 934 H1172 V952"/>
+
+  <rect x="72" y="958" width="392" height="142" rx="11" fill="#f6f8fb" stroke="#d0dae5" stroke-width="1.5"/>
+  <text class="label" x="92" y="989">Fixed validation windows</text>
+  <text class="body" x="92" y="1018">Reset eval RNG · eval + no_grad</text>
+  <text class="body" x="92" y="1044">CE = total CE sum / supervised tokens</text>
+  <text class="small" x="92" y="1076">Preserve module modes and training state</text>
+
+  <rect x="524" y="958" width="392" height="142" rx="11" fill="#f6f8fb" stroke="#d0dae5" stroke-width="1.5"/>
+  <text class="label" x="544" y="989">Autoregressive samples</text>
+  <text class="body" x="544" y="1018">Prompt → forward → sample → append</text>
+  <text class="body" x="544" y="1044">Temperature / top-k · EOS stop</text>
+  <text class="small" x="544" y="1076">Full-context generation; no KV cache yet</text>
+
+  <rect x="976" y="958" width="392" height="142" rx="11" fill="#fff7e9" stroke="#e6cfa2" stroke-width="1.5"/>
+  <text class="label" x="996" y="989">Resumable best.pt / last.pt</text>
+  <text class="body" x="996" y="1018">Model + optimizer / scheduler state</text>
+  <text class="body" x="996" y="1044">Counters + RNGs + experiment identities</text>
+  <text class="small" x="996" y="1076">resume_from restores an update boundary</text>
+
+  <text class="small" x="72" y="1135">Artifacts: config.json · tokenizer/bpe_params.json · train.json · eval.json · generate.json · best.pt · last.pt</text>
+  <text class="small" x="72" y="1161">Optional activation checkpointing recomputes decoder activations during backward; it is separate from saved training checkpoints.</text>
+</svg>

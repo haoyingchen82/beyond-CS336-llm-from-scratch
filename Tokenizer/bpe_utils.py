@@ -10,6 +10,7 @@ PRETOKEN_PATTERN = (
     r"|\s+"
 )
 
+
 def merge(indices: tuple[int, ...], pair: tuple[int, int], new_index: int) -> tuple[int, ...]:
     new_indices = []
     i = 0
@@ -25,11 +26,31 @@ def merge(indices: tuple[int, ...], pair: tuple[int, int], new_index: int) -> tu
 
 def _pretokenize(string: str) -> Iterable[str]:
     _PRETOKEN_REGEX = regex.compile(PRETOKEN_PATTERN)
-
     return (
         match.group(0)
         for match in _PRETOKEN_REGEX.finditer(string)
     )
+
+def _build_maps():
+
+    bs = (
+        list(range(ord("!"), ord("~") + 1))    # 33 ~ 126
+        + list(range(ord("¡"), ord("¬") + 1))  # 161 ~ 172
+        + list(range(ord("®"), ord("ÿ") + 1))  # 174 ~ 255
+    )
+    cs = bs.copy()
+
+
+    offset = 0
+    for byte_val in range(256):
+        if byte_val not in bs:
+            bs.append(byte_val)
+            cs.append(256 + offset)
+            offset += 1
+
+    byte2char = {byte_val: chr(code_point) for byte_val, code_point in zip(bs, cs)}
+    char2byte = {chr(code_point): byte_val for byte_val, code_point in zip(bs, cs)}
+    return byte2char, char2byte
 
 if __name__ == "__main__":
     print(list(_pretokenize("hello world")))

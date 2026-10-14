@@ -1,4 +1,20 @@
-data/
-outputs/
+/*
+!/.gitignore
+!/requirements.txt
+!/DataPipeline/
+!/ModernLM/
+!/scripts/
+!/Tasks/
+!/Tokenizer/
+!/TrainingSystems/
+!/assets/
+
+/TrainingSystems/*
+!/TrainingSystems/runner/
 
 __pycache__/
+*.py[cod]
+
+*.[mM][dD]
+!/README.md
+!/README.zh-CN.md

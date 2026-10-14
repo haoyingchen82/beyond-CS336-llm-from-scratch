@@ -1,0 +1,18 @@
+# Dependencies for the currently implemented llm from scratch components.
+# Versions recorded from cs336 on 2026-10-14: Python 3.12.15, Windows x86_64.
+# Direct dependencies only; pip resolves their transitive dependencies.
+# Project tests use Python's built-in unittest.
+
+# Preserve the installed PyTorch CUDA 13.2 build.
+--extra-index-url https://download.pytorch.org/whl/cu132
+
+# Model computation, training, generation, and tensor rearrangement.
+torch==2.14.1+cu132
+einops==0.8.2
+
+# GPT-2-style pre-tokenization and the Rust BPE backend.
+regex==2026.9.29
+tokenizers==0.22.2
+
+# Parquet corpus reading and data fixtures.
+pyarrow==25.0.1
